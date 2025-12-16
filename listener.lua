@@ -1,23 +1,48 @@
 -- listener.lua (turtle)
-local side = peripheral.find("modem") and peripheral.getName(peripheral.find("modem")) or nil
-if not side then error("No modem found") end
 
+local modem = peripheral.find("modem")
+if not modem then error("No modem attached") end
+local side = peripheral.getName(modem)
 rednet.open(side)
-print("Listening. My ID is: " .. os.getComputerID())
+
+local BASE_URL = "https://raw.githubusercontent.com/Magretson/CC-Tweaked-LUA-Codes/main/"
+
+print("Listener online. ID: " .. os.getComputerID())
 
 while true do
   local senderId, msg = rednet.receive()
   msg = tostring(msg)
 
-  if msg == "dance" then
-    print("Command: dance")
-    shell.run("dance")  -- runs dance.lua as 'dance'
+  -- Commands:
+  -- "update <name>"  -> wget BASE_URL..name..".lua" name..".lua"
+  -- "run <name>"     -> shell.run(name)
+  -- "dance"          -> shell.run("dance")
+  -- "stop"           -> os.reboot()
 
-  elseif msg == "stop" then
-    print("Command: stop (not implemented yet)")
-    -- We'll add a real stop mechanism in the next step.
+  local cmd, arg = msg:match("^(%S+)%s*(.*)$")
+  arg = (arg and arg ~= "") and arg or nil
 
-  elseif msg == "ping" then
-    rednet.send(senderId, "pong")
+  if cmd == "update" and arg then
+    local url = BASE_URL .. arg .. ".lua"
+    local file = arg .. ".lua"
+    print("Updating: " .. file)
+    local ok = shell.run("wget", url, file)
+    rednet.send(senderId, ok and ("OK updated " .. file) or ("FAIL update " .. file))
+
+  elseif cmd == "run" and arg then
+    print("Running: " .. arg)
+    rednet.send(senderId, "OK running " .. arg)
+    shell.run(arg)
+
+  elseif cmd == "dance" then
+    rednet.send(senderId, "OK dancing")
+    shell.run("dance")
+
+  elseif cmd == "stop" then
+    rednet.send(senderId, "OK stopping (reboot)")
+    os.reboot()
+
+  else
+    rednet.send(senderId, "Unknown command: " .. msg)
   end
 end
