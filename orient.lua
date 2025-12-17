@@ -108,6 +108,10 @@ if not facing then
   print("Unexpected movement delta: dx=" .. tostring(dx) .. " dz=" .. tostring(dz))
   return
 end
+
+local f = fs.open("facing.txt", "w")
+f.write(facing)
+f.close()
 -- MAIN LOGIC END--
 
 --PRINT MESSAGE--
