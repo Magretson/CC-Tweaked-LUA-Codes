@@ -47,7 +47,7 @@ local M = {}
 
 function M.run(goal)
   -- recalibrate heading (simple + robust for now)
-  shell.run("orient.lua")
+  dofile("orient.lua")
 
   local start, err = gpsPos()
   if not start then return false, err end
